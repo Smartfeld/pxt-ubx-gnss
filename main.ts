@@ -2,10 +2,12 @@
 namespace UBLOX_GNSS {
 
     const DEVICE_ADDR = 0x42
+    const MAX_RETRY = 30
 
     let data_valid: boolean = false
     let utc_time: number = 0
     let utc_date: number = 0
+    let fix: number = 0
 
     let north: boolean = true
     let east: boolean = true
@@ -13,6 +15,9 @@ namespace UBLOX_GNSS {
     let latitude: number = 0
     let longitude: number = 0
     let speed: number = 0
+    let altitude: number = 0
+
+
 
 
     //%blockID=getMessage
@@ -20,6 +25,18 @@ namespace UBLOX_GNSS {
     export function getNMEAMessage(){
         let line = ''
         let rx_byte = 0xff
+        let fail_cnt = 0
+
+        do{
+            rx_byte = pins.i2cReadNumber(DEVICE_ADDR, NumberFormat.UInt8LE, false)
+            fail_cnt++
+        } while ((rx_byte != 0x24) && (fail_cnt < MAX_RETRY))       // Dollar sign, start of line
+
+        if (fail_cnt >= MAX_RETRY){
+            return 1
+        }
+        line = ''   // Dump content
+        
 
         while (rx_byte != 0x0A){
             rx_byte = pins.i2cReadNumber(DEVICE_ADDR, NumberFormat.UInt8LE, false)
@@ -33,6 +50,15 @@ namespace UBLOX_GNSS {
             } else {
                 line = line + String.fromCharCode(rx_byte)
             }
+
+            if (rx_byte == 0xff){
+                fail_cnt++
+                if (fail_cnt >= MAX_RETRY){
+                    return '1'
+                }
+            } else {
+                fail_cnt = 0
+            }
         }
         return line
     }
@@ -40,6 +66,7 @@ namespace UBLOX_GNSS {
     //%blockID=parser
     //%block="Parse %nmea"
     export function parseNMEA(nmea: String){
+        let tmp1 = 0
         let fields = nmea.split(',')
         if(fields[0].includes("RMC")){
             utc_time = parseFloat(fields[1])
@@ -51,10 +78,35 @@ namespace UBLOX_GNSS {
             north = (fields[6] == 'E')
             data_valid = (fields[2] == 'A')
         }
+
+        if (fields[0].includes("GGA")) {
+            utc_time = parseFloat(fields[1])
+
+            latitude = parseFloat(fields[2])
+            north = (fields[3] == 'N')
+            longitude = parseFloat(fields[4])
+            north = (fields[5] == 'E')
+
+            fix = parseInt(fields[6])
+
+            altitude = parseFloat(fields[9])
+            
+            data_valid = (fix > 0)
+        }
+
         else {
 
         }
 
+    }
+
+    //%blockID=loc_min2deg
+    //%block="Location %min min to degrees "
+    export function loc_min2deg(input: number){
+        let deg = Math.floor(input / 100)
+        let min = input - deg
+        
+        return deg + (60.0/min)
     }
 
     //%blockID=isDataValid
@@ -103,6 +155,12 @@ namespace UBLOX_GNSS {
     //%block="Get East"
     export function getEast() {
         return east
+    }
+
+    //%blockID=getAltitude
+    //%block="Get Altitude"
+    export function getAltitude() {
+        return altitude
     }
 
 
