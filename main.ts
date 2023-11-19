@@ -78,7 +78,7 @@ namespace UBLOX_GNSS {
     export function parseNMEA(nmea: String) {
         let fields = nmea.split(',')
 
-        if (fields[0] == "$GNGGA") {
+        if (fields[0].includes("GGA")) {
             utc_time = parseFloat(fields[1])
             latitude = parseFloat(fields[2])
             north = (fields[3] == 'N')
@@ -95,7 +95,7 @@ namespace UBLOX_GNSS {
             data_valid = (gps_fix > 0)
         }
 
-        else if (fields[0] == ("$GNRMC")) {
+        else if (fields[0].includes("RMC")) {
             utc_time = parseFloat(fields[1])
 
             latitude = parseFloat(fields[3])
@@ -104,6 +104,8 @@ namespace UBLOX_GNSS {
             north = (fields[4] == 'N')
             north = (fields[6] == 'E')
             data_valid = (fields[2] == 'A')
+
+            gps_fix = parseInt(fields[6])
         }
 
         else {
