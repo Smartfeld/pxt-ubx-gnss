@@ -15,6 +15,7 @@ namespace UBLOX_GNSS {
     let latitude: number = 0
     let longitude: number = 0
     let speed: number = 0
+    let course: number = 0
     let altitude: number = 0
 
 
@@ -97,15 +98,17 @@ namespace UBLOX_GNSS {
 
         else if (fields[0].includes("RMC")) {
             utc_time = parseFloat(fields[1])
+            utc_date = parseFloat(fields[9])
 
             latitude = parseFloat(fields[3])
-            longitude = parseFloat(fields[5])
-
             north = (fields[4] == 'N')
-            north = (fields[6] == 'E')
-            data_valid = (fields[2] == 'A')
+            longitude = parseFloat(fields[5])
+            east = (fields[6] == 'E')
 
-            gps_fix = parseInt(fields[6])
+            speed = parseFloat(fields[7])
+            course = parseFloat(fields[8])
+
+            data_valid = (fields[2] == 'A')
         }
 
         else {
@@ -149,7 +152,11 @@ namespace UBLOX_GNSS {
     //%blockID=getUTCTime
     //%block="Get UTCTime"
     export function getUTCTime() {
-        return utc_time
+        let str = utc_time.toString()
+        let hour = parseInt(str.slice(0,2))
+        let min = parseInt(str.slice(2, 4))
+        let sec = parseInt(str.slice(4, 6))
+        return hour.toString() + ":" + min.toString() + ":" + sec.toString()
     }
 
     //%blockID=getUTCDate
