@@ -149,9 +149,15 @@ namespace UBLOX_GNSS {
         return speed
     }
 
+    //%blockID=getCourse
+    //%block="Get Course"
+    export function getCourse() {
+        return course
+    }
+
     //%blockID=getUTCTime
     //%block="Get UTCTime"
-    export function getUTCTime() {
+    export function getUTCTime(): string {
         let str = utc_time.toString()
         let hour = parseInt(str.slice(0,2))
         let min = parseInt(str.slice(2, 4))
